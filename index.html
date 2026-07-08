@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VCBR · Transacionalidade & Potencial de Automação</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+:root{
+  --purple:#A100FF;--purple-d:#7500C0;--purple-l:#E6CCFF;--purple-bg:#F7F1FF;
+  --ink:#1A1A24;--ink2:#3C3C48;--muted:#6E6E7A;--faint:#9A9AA6;
+  --bg:#FFFFFF;--bg2:#FAFAFC;--panel:#FFFFFF;--line:#E6E6EC;--line2:#D4D4DC;
+  --auto:#A100FF;--hybrid:#B98AE0;--human:#D9D2E8;
+  --grad1:#A100FF;--grad2:#C766FF;
+  --disp:'Inter',system-ui,sans-serif;--mono:'IBM Plex Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:'Inter',system-ui,sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1200px;margin:0 auto;padding:0 32px}
+/* header */
+header.top{border-bottom:1px solid var(--line);position:sticky;top:0;z-index:50;background:rgba(255,255,255,.94);backdrop-filter:blur(10px)}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;max-width:1200px;margin:0 auto;flex-wrap:wrap;gap:12px}
+.brand{display:flex;align-items:center;gap:14px}
+.gt{font-family:var(--disp);font-weight:800;color:var(--purple);font-size:26px;line-height:1;letter-spacing:-1px}
+.brand h1{font-family:var(--disp);font-size:15px;font-weight:700;color:var(--ink)}
+.brand .sub{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.3px;margin-top:2px}
+.langtog{display:flex;border:1px solid var(--line2);border-radius:4px;overflow:hidden;font-family:var(--mono);font-size:12px}
+.langtog button{background:#fff;color:var(--muted);border:0;padding:7px 14px;cursor:pointer;font-family:var(--mono)}
+.langtog button.on{background:var(--purple);color:#fff;font-weight:600}
+/* hero */
+.hero{padding:64px 0 20px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:2.5px;text-transform:uppercase;color:var(--purple);margin-bottom:18px;display:flex;align-items:center;gap:8px}
+.eyebrow::before{content:'>';font-weight:800;font-family:var(--disp)}
+.hero h2{font-family:var(--disp);font-size:clamp(30px,4.6vw,50px);font-weight:800;line-height:1.06;letter-spacing:-1.4px;max-width:17ch;color:var(--ink)}
+.hero h2 em{font-style:normal;color:var(--purple)}
+.hero p.lead{color:var(--ink2);font-size:17px;max-width:64ch;margin-top:20px;font-weight:400}
+/* kpis */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin:44px 0 8px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.kpi{background:#fff;padding:24px 22px;position:relative}
+.kpi::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--purple);opacity:0;transition:.2s}
+.kpi:hover::before{opacity:1}
+.kpi .n{font-family:var(--disp);font-size:38px;font-weight:800;line-height:1;color:var(--ink);letter-spacing:-1px}
+.kpi .n small{font-size:16px;color:var(--faint);font-weight:600}
+.kpi.hl .n{color:var(--purple)}
+.kpi .l{font-family:var(--mono);font-size:10.5px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-top:10px}
+/* sections */
+section.block{padding:46px 0;border-top:1px solid var(--line)}
+.sechead{margin-bottom:6px}
+.sechead .idx{font-family:var(--mono);color:var(--purple);font-size:12px;font-weight:600;letter-spacing:1px}
+.sechead h3{font-family:var(--disp);font-size:27px;font-weight:700;letter-spacing:-.6px;color:var(--ink);margin-top:4px;display:flex;align-items:baseline;gap:10px}
+.sechead h3::before{content:'>';color:var(--purple);font-weight:800;font-size:22px}
+.sechead p{color:var(--muted);font-size:14.5px;max-width:76ch;margin-top:8px}
+.card{background:#fff;border:1px solid var(--line);border-radius:8px;padding:24px;margin-top:24px;box-shadow:0 1px 3px rgba(26,26,36,.04)}
+.chart{width:100%}
+.legend{display:flex;gap:20px;flex-wrap:wrap;font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:10px}
+.legend .k{display:flex;align-items:center;gap:7px}
+.legend .sw{width:12px;height:12px;border-radius:2px;flex:none}
+/* insight — executive callout */
+.insight{display:flex;gap:0;margin-top:18px;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.insight .tag{background:var(--purple);color:#fff;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:1.5px;padding:16px 14px;writing-mode:vertical-rl;transform:rotate(180deg);text-transform:uppercase;flex:none;display:flex;align-items:center;justify-content:center}
+.insight .body{padding:16px 20px;background:var(--purple-bg)}
+.insight .body h4{font-family:var(--disp);font-size:15px;font-weight:700;color:var(--ink);margin-bottom:4px}
+.insight .body p{font-size:14px;color:var(--ink2)}
+.insight .body b{color:var(--purple-d);font-weight:700}
+/* table */
+.ranktbl{width:100%;border-collapse:collapse;font-size:13.5px}
+.ranktbl th{font-family:var(--mono);font-size:10px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);text-align:left;padding:10px 10px;border-bottom:2px solid var(--line2)}
+.ranktbl td{padding:11px 10px;border-bottom:1px solid var(--line)}
+.ranktbl tr:hover td{background:var(--purple-bg)}
+.pill{font-family:var(--mono);font-size:10px;font-weight:600;padding:3px 10px;border-radius:3px;white-space:nowrap;text-transform:uppercase;letter-spacing:.5px}
+.pill.auto{background:#F0E0FF;color:var(--purple-d)}
+.pill.hybrid{background:#EFE8F7;color:#8A6BB0}
+.pill.human{background:#EFEFF3;color:#6E6E7A}
+.bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden;min-width:60px}
+.bar span{display:block;height:100%;background:linear-gradient(90deg,var(--purple),var(--grad2))}
+/* method + foot */
+.method{background:var(--bg2);border:1px solid var(--line);border-left:3px solid var(--purple);border-radius:6px;padding:20px 22px;margin-top:20px;font-size:13px;color:var(--ink2)}
+.method b{color:var(--ink)}
+.method .scale{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.method .sc{font-family:var(--mono);font-size:11px;padding:6px 11px;border-radius:4px;border:1px solid var(--line2);background:#fff}
+.foot{padding:40px 0 64px;border-top:1px solid var(--line);color:var(--faint);font-family:var(--mono);font-size:11.5px;line-height:1.9}
+@media(max-width:900px){.kpis{grid-template-columns:repeat(2,1fr)}.hero{padding:40px 0 12px}.wrap{padding:0 20px}}
+[data-en]{display:none}
+.dlbtn{display:inline-flex;align-items:center;gap:6px;background:var(--purple);color:#fff;border:0;border-radius:4px;padding:8px 16px;cursor:pointer;font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.5px;transition:.2s}
+.dlbtn:hover{background:var(--purple-d)}
+.dlbtn.ghost{background:#fff;color:var(--purple);border:1px solid var(--purple)}
+.dlbtn.ghost:hover{background:var(--purple-bg)}
+@media print{
+  @page{size:A4 portrait;margin:12mm}
+  html,body{background:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  header.top{position:static;border-bottom:1px solid var(--line)}
+  .dlbtn,.langtog{display:none!important}
+  .wrap{max-width:100%;padding:0}
+  section.block{padding:18px 0;break-inside:avoid;page-break-inside:avoid}
+  .card{box-shadow:none;break-inside:avoid;page-break-inside:avoid}
+  .hero{padding:20px 0 8px}
+  .kpis{break-inside:avoid}
+  .insight{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<header class="top"><div class="topbar">
+  <div class="brand"><span class="gt">&gt;</span><div>
+    <h1 data-pt>VCBR · Transacionalidade & Automação</h1><h1 data-en>VCBR · Transactionality & Automation</h1>
+    <div class="sub" data-pt>Análise de processos HCM · Brasil · 12 processos · 15 atores</div><div class="sub" data-en>HCM process analysis · Brazil · 12 processes · 15 actors</div>
+  </div></div>
+  <div style="display:flex;gap:10px;align-items:center">
+    <button class="dlbtn" onclick="downloadHTML()">&#8595; HTML</button>
+    <button class="dlbtn ghost" onclick="window.print()">&#8595; PDF</button>
+    <div class="langtog"><button id="btPt" class="on" onclick="setLang('pt')">PT-BR</button><button id="btEn" onclick="setLang('en')">EN</button></div>
+  </div>
+</div></header>
+
+<div class="wrap">
+  <div class="hero">
+    <div class="eyebrow" data-pt>Diagnóstico de potencial de automação / RPA</div><div class="eyebrow" data-en>Automation / RPA opportunity diagnostic</div>
+    <h2 data-pt>Onde o trabalho <em>transacional</em> se concentra — e o que a máquina pode assumir.</h2>
+    <h2 data-en>Where <em>transactional</em> work concentrates — and what machines can take over.</h2>
+    <p class="lead" data-pt>335 atividades manuais lidas e pontuadas de 1 a 5 pela natureza cognitiva. Nota alta = operacional e repetitivo, candidato a RPA/agente. Nota baixa = julgamento humano, confiança e responsabilização institucional.</p>
+    <p class="lead" data-en>335 manual activities read and scored 1–5 by cognitive nature. High = operational and repetitive, an RPA/agent candidate. Low = human judgment, trust and institutional accountability.</p>
+    <div class="kpis" id="kpis"></div>
+  </div>
+</div>
+
+<div class="wrap">
+  <section class="block">
+    <div class="sechead"><span class="idx">01</span><h3 data-pt>Matriz de priorização · por processo</h3><h3 data-en>Prioritization matrix · by process</h3>
+      <p data-pt>Volume de atividades (X) × transacionalidade média (Y). Quadrante superior-direito = ganho rápido (alto volume, alta transacionalidade). Tamanho da bolha = nº de atores (complexidade de coordenação).</p>
+      <p data-en>Activity volume (X) × average transactionality (Y). Top-right quadrant = quick win (high volume, high transactionality). Bubble size = nº of actors (coordination complexity).</p>
+    </div>
+    <div class="card"><div id="quad" class="chart" style="height:680px"></div></div>
+    <div class="insight"><div class="tag">Insight</div><div class="body"><h4 id="ins-quad-h"></h4><p id="ins-quad"></p></div></div>
+  </section>
+
+  <section class="block">
+    <div class="sechead"><span class="idx">02</span><h3 data-pt>Matriz de priorização · por ator</h3><h3 data-en>Prioritization matrix · by actor</h3>
+      <p data-pt>Cada ator consolidado através de todos os processos: mostra de quem é o trabalho automatizável. Bolha = nº de raias (presença entre processos); cor = classificação.</p>
+      <p data-en>Each actor consolidated across all processes: shows whose work is automatable. Bubble = nº of swimlanes (spread across processes); color = class.</p>
+    </div>
+    <div class="card"><div id="quadA" class="chart" style="height:680px"></div></div>
+    <div class="insight"><div class="tag">Insight</div><div class="body"><h4 id="ins-actor-h"></h4><p id="ins-actor"></p></div></div>
+  </section>
+
+  <section class="block">
+    <div class="sechead"><span class="idx">03</span><h3 data-pt>Mapa de calor · processo × ator</h3><h3 data-en>Heatmap · process × actor</h3>
+      <p data-pt>Nota média por ator dentro de cada processo, ordenada da mais humana (topo) à mais automatizável (base). Vermelho = automatizável; verde = humano crítico.</p>
+      <p data-en>Average score per actor within each process, ordered from most human (top) to most automatable (bottom). Red = automatable; green = human-critical.</p>
+    </div>
+    <div class="card"><div id="heat" class="chart" style="height:640px"></div>
+      <div class="legend">
+        <div class="k"><span class="sw" style="background:#C00000"></span><span data-pt>1–2 · Automatizável</span><span data-en>1–2 · Automatable</span></div>
+        <div class="k"><span class="sw" style="background:#E8B800"></span><span data-pt>~3 · Híbrida</span><span data-en>~3 · Hybrid</span></div>
+        <div class="k"><span class="sw" style="background:#3E8E3E"></span><span data-pt>4–5 · Humana crítica</span><span data-en>4–5 · Human-critical</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="sechead"><span class="idx">04</span><h3 data-pt>Composição do trabalho por processo</h3><h3 data-en>Work composition by process</h3>
+      <p data-pt>Cada processo dividido pela natureza das atividades (% do total). Ordenado pela maior fatia automatizável — o topo é onde a automação captura mais.</p>
+      <p data-en>Each process split by activity nature (% of total). Ordered by largest automatable share — the top is where automation captures the most.</p>
+    </div>
+    <div class="card"><div id="stackbars" class="chart" style="height:500px"></div>
+      <div class="legend">
+        <div class="k"><span class="sw" style="background:#A100FF"></span><span data-pt>Automatizável (1–2)</span><span data-en>Automatable (1–2)</span></div>
+        <div class="k"><span class="sw" style="background:#B98AE0"></span><span data-pt>Híbrida (3)</span><span data-en>Hybrid (3)</span></div>
+        <div class="k"><span class="sw" style="background:#D9D2E8"></span><span data-pt>Humana crítica (4–5)</span><span data-en>Human-critical (4–5)</span></div>
+      </div>
+    </div>
+    <div class="insight"><div class="tag">Insight</div><div class="body"><h4 id="ins-stack-h"></h4><p id="ins-stack"></p></div></div>
+  </section>
+
+  <section class="block">
+    <div class="sechead"><span class="idx">05</span><h3 data-pt>Retrato atual · manual vs. automático</h3><h3 data-en>Current state · manual vs. automated</h3>
+      <p data-pt>Estado as-is. Só uma fração já roda por sistema/robô — o fluxo mostra quanto de cada processo ainda depende de execução humana.</p>
+      <p data-en>As-is state. Only a fraction already runs via system/robot — the flow shows how much of each process still relies on human execution.</p>
+    </div>
+    <div class="card"><div id="sankeyB" class="chart" style="height:660px"></div></div>
+    <div class="insight"><div class="tag">Insight</div><div class="body"><h4 id="ins-sankB-h"></h4><p id="ins-sankB"></p></div></div>
+  </section>
+
+  <section class="block">
+    <div class="sechead"><span class="idx">06</span><h3 data-pt>Ranking de oportunidade · atores</h3><h3 data-en>Opportunity ranking · actors</h3>
+      <p data-pt>Atores ordenados por índice = volume manual × proximidade da nota a 1. No topo, os melhores alvos para a primeira onda de automação.</p>
+      <p data-en>Actors ranked by index = manual volume × score closeness to 1. At the top, the best targets for a first automation wave.</p>
+    </div>
+    <div class="card"><table class="ranktbl" id="ranktbl"></table></div>
+  </section>
+
+  <section class="block">
+    <div class="sechead"><span class="idx">07</span><h3 data-pt>Metodologia</h3><h3 data-en>Methodology</h3></div>
+    <div class="method">
+      <p data-pt><b>Fonte:</b> 22 diagramas BPMN (as-is) de processos HCM da VCBR (Brasil), <b>392 atividades</b> em 55 raias, consolidadas em <b>12 processos</b> e <b>15 atores padrão</b>. Cada uma das <b>335 atividades manuais</b> foi lida e pontuada individualmente (1–5). <b>Nível 5 estrito:</b> só re-digitação de dados já existentes em outro sistema. Atividades automáticas ficam fora da média.</p>
+      <p data-en><b>Source:</b> 22 as-is BPMN diagrams of VCBR HCM processes (Brazil), <b>392 activities</b> across 55 swimlanes, consolidated into <b>12 processes</b> and <b>15 standard actors</b>. Each of the <b>335 manual activities</b> was scored individually (1–5). <b>Strict level 5:</b> only re-keying of data already in another system. Automated activities are excluded from the average.</p>
+      <div class="scale">
+        <span class="sc" style="color:#6E6E7A"><b>1–2</b> <span data-pt>julgamento humano</span><span data-en>human judgment</span></span>
+        <span class="sc" style="color:#8A6BB0"><b>3</b> <span data-pt>intermediária</span><span data-en>intermediate</span></span>
+        <span class="sc" style="color:var(--purple-d)"><b>4–5</b> <span data-pt>operacional → automatizável</span><span data-en>operational → automatable</span></span>
+      </div>
+    </div>
+  </section>
+
+  <div class="foot">
+    <div data-pt>VCBR · Transacionalidade e potencial de automação · Brasil · Escopo: 12 processos com BPMN.</div>
+    <div data-en>VCBR · Transactionality & automation potential · Brazil · Scope: 12 processes with BPMN.</div>
+    <div data-pt>Notas revisadas atividade a atividade — sujeitas a recalibração. Raias padronizadas em atores via dicionário.</div>
+    <div data-en>Scores reviewed activity by activity — subject to recalibration. Swimlanes standardized into actors via dictionary.</div>
+  </div>
+</div>
+
+<script>
+const DATA = {"l3": [{"l3": "Administração de Estrutura Organizacional", "l3en": "Org. Structure Admin", "subs": [{"sub": "Criação de Estrutura", "suben": "Structure Creation", "total": 19, "man": 19, "aut": 0, "avg": 2.89}, {"sub": "Alteração / Delimitação", "suben": "Change / Delimitation", "total": 9, "man": 9, "aut": 0, "avg": 2.89}], "total": 28, "man": 28, "aut": 0, "nManual": 28, "avg": 2.89, "band": "hybrid", "nactors": 5, "nlanes": 8}, {"l3": "Gestão de Posições", "l3en": "Position Management", "subs": [{"sub": "Planejamento Anual", "suben": "Annual Planning", "total": 6, "man": 5, "aut": 1, "avg": 1.8}, {"sub": "Ad hoc", "suben": "Ad hoc", "total": 11, "man": 7, "aut": 4, "avg": 3.14}], "total": 17, "man": 12, "aut": 5, "nManual": 12, "avg": 2.58, "band": "hybrid", "nactors": 4, "nlanes": 9}, {"l3": "Recrutamento e Seleção", "l3en": "Recruitment & Selection", "subs": [{"sub": "Recrutamento e Seleção", "suben": "Recruitment & Selection", "total": 37, "man": 34, "aut": 3, "avg": 3.09}], "total": 37, "man": 34, "aut": 3, "nManual": 34, "avg": 3.09, "band": "hybrid", "nactors": 6, "nlanes": 7}, {"l3": "Admissão", "l3en": "Hiring", "subs": [{"sub": "Admissão", "suben": "Hiring", "total": 114, "man": 104, "aut": 10, "avg": 4.06}], "total": 114, "man": 104, "aut": 10, "nManual": 104, "avg": 4.06, "band": "auto", "nactors": 6, "nlanes": 10}, {"l3": "Transferência", "l3en": "Transfer", "subs": [{"sub": "Mesmo CNPJ", "suben": "Same CNPJ", "total": 4, "man": 1, "aut": 3, "avg": 4.0}, {"sub": "Outro CNPJ", "suben": "Other CNPJ", "total": 20, "man": 17, "aut": 3, "avg": 3.29}], "total": 24, "man": 18, "aut": 6, "nManual": 18, "avg": 3.33, "band": "hybrid", "nactors": 3, "nlanes": 5}, {"l3": "Promoção", "l3en": "Promotion", "subs": [{"sub": "Promoção", "suben": "Promotion", "total": 5, "man": 2, "aut": 3, "avg": 3.0}], "total": 5, "man": 2, "aut": 3, "nManual": 2, "avg": 3.0, "band": "hybrid", "nactors": 2, "nlanes": 2}, {"l3": "Licenças", "l3en": "Leaves", "subs": [{"sub": "Licenças e Afastamentos", "suben": "Leaves & Absences", "total": 23, "man": 16, "aut": 7, "avg": 3.5}], "total": 23, "man": 16, "aut": 7, "nManual": 16, "avg": 3.5, "band": "hybrid", "nactors": 7, "nlanes": 7}, {"l3": "Gestão de Férias", "l3en": "Vacation Mgmt", "subs": [{"sub": "Férias Individuais", "suben": "Individual Vacation", "total": 30, "man": 24, "aut": 6, "avg": 3.5}, {"sub": "Férias Coletivas", "suben": "Collective Vacation", "total": 13, "man": 9, "aut": 4, "avg": 2.44}], "total": 43, "man": 33, "aut": 10, "nManual": 33, "avg": 3.21, "band": "hybrid", "nactors": 7, "nlanes": 10}, {"l3": "Desligamento", "l3en": "Termination", "subs": [{"sub": "Voluntário", "suben": "Voluntary", "total": 20, "man": 17, "aut": 3, "avg": 3.53}, {"sub": "Involuntário", "suben": "Involuntary", "total": 19, "man": 17, "aut": 2, "avg": 2.94}], "total": 39, "man": 34, "aut": 5, "nManual": 34, "avg": 3.24, "band": "hybrid", "nactors": 5, "nlanes": 10}, {"l3": "Administração de dados pessoais dos colaboradores", "l3en": "Personal Data Admin", "subs": [{"sub": "Dados Pessoais", "suben": "Personal Data", "total": 8, "man": 7, "aut": 1, "avg": 4.0}, {"sub": "Cota PCD", "suben": "PwD Quota", "total": 3, "man": 2, "aut": 1, "avg": 4.0}], "total": 11, "man": 9, "aut": 2, "nManual": 9, "avg": 4.0, "band": "auto", "nactors": 2, "nlanes": 3}, {"l3": "Controle de Jornada", "l3en": "Time & Attendance", "subs": [{"sub": "Criação de Horário de Trabalho", "suben": "Work Schedule Creation", "total": 5, "man": 5, "aut": 0, "avg": 3.2}, {"sub": "Apontamento de Horas", "suben": "Time Logging", "total": 6, "man": 6, "aut": 0, "avg": 4.0}, {"sub": "Ajuste Retroativo", "suben": "Retroactive Adjustment", "total": 9, "man": 9, "aut": 0, "avg": 3.11}, {"sub": "Fechamento do Ponto", "suben": "Timesheet Closing", "total": 7, "man": 4, "aut": 3, "avg": 3.5}, {"sub": "Quitação Banco de Horas", "suben": "Hour-Bank Settlement", "total": 6, "man": 4, "aut": 2, "avg": 3.25}], "total": 33, "man": 28, "aut": 5, "nManual": 28, "avg": 3.39, "band": "hybrid", "nactors": 8, "nlanes": 14}, {"l3": "Administração de dados de contrato", "l3en": "Contract Data Management", "subs": [{"sub": "Dados de Contrato (Temporário)", "suben": "Contract Data (Temporary)", "total": 18, "man": 17, "aut": 1, "avg": 2.65}], "total": 18, "man": 17, "aut": 1, "nManual": 17, "avg": 2.65, "band": "hybrid", "nactors": 2, "nlanes": 2}], "subs": [{"l3": "Administração de Estrutura Organizacional", "l3en": "Org. Structure Admin", "sub": "Criação de Estrutura", "suben": "Structure Creation", "total": 19, "man": 19, "aut": 0, "avg": 2.89, "band": "hybrid", "nManual": 19}, {"l3": "Administração de Estrutura Organizacional", "l3en": "Org. Structure Admin", "sub": "Alteração / Delimitação", "suben": "Change / Delimitation", "total": 9, "man": 9, "aut": 0, "avg": 2.89, "band": "hybrid", "nManual": 9}, {"l3": "Gestão de Posições", "l3en": "Position Management", "sub": "Planejamento Anual", "suben": "Annual Planning", "total": 6, "man": 5, "aut": 1, "avg": 1.8, "band": "human", "nManual": 5}, {"l3": "Gestão de Posições", "l3en": "Position Management", "sub": "Ad hoc", "suben": "Ad hoc", "total": 11, "man": 7, "aut": 4, "avg": 3.14, "band": "hybrid", "nManual": 7}, {"l3": "Recrutamento e Seleção", "l3en": "Recruitment & Selection", "sub": "Recrutamento e Seleção", "suben": "Recruitment & Selection", "total": 37, "man": 34, "aut": 3, "avg": 3.09, "band": "hybrid", "nManual": 34}, {"l3": "Admissão", "l3en": "Hiring", "sub": "Admissão", "suben": "Hiring", "total": 114, "man": 104, "aut": 10, "avg": 4.06, "band": "auto", "nManual": 104}, {"l3": "Transferência", "l3en": "Transfer", "sub": "Mesmo CNPJ", "suben": "Same CNPJ", "total": 4, "man": 1, "aut": 3, "avg": 4.0, "band": "auto", "nManual": 1}, {"l3": "Transferência", "l3en": "Transfer", "sub": "Outro CNPJ", "suben": "Other CNPJ", "total": 20, "man": 17, "aut": 3, "avg": 3.29, "band": "hybrid", "nManual": 17}, {"l3": "Promoção", "l3en": "Promotion", "sub": "Promoção", "suben": "Promotion", "total": 5, "man": 2, "aut": 3, "avg": 3.0, "band": "hybrid", "nManual": 2}, {"l3": "Licenças", "l3en": "Leaves", "sub": "Licenças e Afastamentos", "suben": "Leaves & Absences", "total": 23, "man": 16, "aut": 7, "avg": 3.5, "band": "hybrid", "nManual": 16}, {"l3": "Gestão de Férias", "l3en": "Vacation Mgmt", "sub": "Férias Individuais", "suben": "Individual Vacation", "total": 30, "man": 24, "aut": 6, "avg": 3.5, "band": "hybrid", "nManual": 24}, {"l3": "Gestão de Férias", "l3en": "Vacation Mgmt", "sub": "Férias Coletivas", "suben": "Collective Vacation", "total": 13, "man": 9, "aut": 4, "avg": 2.44, "band": "human", "nManual": 9}, {"l3": "Desligamento", "l3en": "Termination", "sub": "Voluntário", "suben": "Voluntary", "total": 20, "man": 17, "aut": 3, "avg": 3.53, "band": "hybrid", "nManual": 17}, {"l3": "Desligamento", "l3en": "Termination", "sub": "Involuntário", "suben": "Involuntary", "total": 19, "man": 17, "aut": 2, "avg": 2.94, "band": "hybrid", "nManual": 17}, {"l3": "Administração de dados pessoais dos colaboradores", "l3en": "Personal Data Admin", "sub": "Dados Pessoais", "suben": "Personal Data", "total": 8, "man": 7, "aut": 1, "avg": 4.0, "band": "auto", "nManual": 7}, {"l3": "Administração de dados pessoais dos colaboradores", "l3en": "Personal Data Admin", "sub": "Cota PCD", "suben": "PwD Quota", "total": 3, "man": 2, "aut": 1, "avg": 4.0, "band": "auto", "nManual": 2}, {"l3": "Controle de Jornada", "l3en": "Time & Attendance", "sub": "Criação de Horário de Trabalho", "suben": "Work Schedule Creation", "total": 5, "man": 5, "aut": 0, "avg": 3.2, "band": "hybrid", "nManual": 5}, {"l3": "Controle de Jornada", "l3en": "Time & Attendance", "sub": "Apontamento de Horas", "suben": "Time Logging", "total": 6, "man": 6, "aut": 0, "avg": 4.0, "band": "auto", "nManual": 6}, {"l3": "Controle de Jornada", "l3en": "Time & Attendance", "sub": "Ajuste Retroativo", "suben": "Retroactive Adjustment", "total": 9, "man": 9, "aut": 0, "avg": 3.11, "band": "hybrid", "nManual": 9}, {"l3": "Controle de Jornada", "l3en": "Time & Attendance", "sub": "Fechamento do Ponto", "suben": "Timesheet Closing", "total": 7, "man": 4, "aut": 3, "avg": 3.5, "band": "hybrid", "nManual": 4}, {"l3": "Controle de Jornada", "l3en": "Time & Attendance", "sub": "Quitação Banco de Horas", "suben": "Hour-Bank Settlement", "total": 6, "man": 4, "aut": 2, "avg": 3.25, "band": "hybrid", "nManual": 4}, {"l3": "Administração de dados de contrato", "l3en": "Contract Data Management", "sub": "Dados de Contrato (Temporário)", "suben": "Contract Data (Temporary)", "total": 18, "man": 17, "aut": 1, "avg": 2.65, "band": "hybrid", "nManual": 17}], "lanesL3": [{"l3": "Administração de Estrutura Organizacional", "l3en": "Org. Structure Admin", "actor": "Business Partner (BP)", "acten": "Business Partner (BP)", "tot": 4, "man": 4, "avg": 3.25, "band": "hybrid"}, {"l3": "Administração de Estrutura Organizacional", "l3en": "Org. Structure Admin", "actor": "Jurídico / Compliance / SST", "acten": "Legal / Compliance / OHS", "tot": 2, "man": 2, "avg": 1.5, "band": "human"}, {"l3": "Administração de Estrutura Organizacional", "l3en": "Org. Structure Admin", "actor": "Operações de RH", "acten": "HR Operations", "tot": 8, "man": 8, "avg": 2.62, "band": "hybrid"}, {"l3": "Administração de Estrutura Organizacional", "l3en": "Org. Structure Admin", "actor": "COE", "acten": "COE", "tot": 5, "man": 5, "avg": 3.0, "band": "hybrid"}, {"l3": "Administração de Estrutura Organizacional", "l3en": "Org. Structure Admin", "actor": "TI / SAP", "acten": "IT / SAP", "tot": 9, "man": 9, "avg": 3.22, "band": "hybrid"}, {"l3": "Gestão de Posições", "l3en": "Position Management", "actor": "Gestor / Líder", "acten": "Manager / Leader", "tot": 1, "man": 1, "avg": 2.0, "band": "human"}, {"l3": "Gestão de Posições", "l3en": "Position Management", "actor": "Business Partner (BP)", "acten": "Business Partner (BP)", "tot": 3, "man": 3, "avg": 3.33, "band": "hybrid"}, {"l3": "Gestão de Posições", "l3en": "Position Management", "actor": "Planejamento / Orçamento", "acten": "Planning / Budget", "tot": 10, "man": 6, "avg": 2.17, "band": "human"}, {"l3": "Gestão de Posições", "l3en": "Position Management", "actor": "Admissão (Operação)", "acten": "Hiring (Operations)", "tot": 3, "man": 2, "avg": 3.0, "band": "hybrid"}, {"l3": "Recrutamento e Seleção", "l3en": "Recruitment & Selection", "actor": "Gestor / Líder", "acten": "Manager / Leader", "tot": 3, "man": 3, "avg": 3.33, "band": "hybrid"}, {"l3": "Recrutamento e Seleção", "l3en": "Recruitment & Selection", "actor": "Business Partner (BP)", "acten": "Business Partner (BP)", "tot": 8, "man": 7, "avg": 3.29, "band": "hybrid"}, {"l3": "Recrutamento e Seleção", "l3en": "Recruitment & Selection", "actor": "Recrutamento", "acten": "Recruitment", "tot": 23, "man": 21, "avg": 3.0, "band": "hybrid"}, {"l3": "Recrutamento e Seleção", "l3en": "Recruitment & Selection", "actor": "Empregado / Candidato", "acten": "Employee / Candidate", "tot": 1, "man": 1, "avg": 4.0, "band": "auto"}, {"l3": "Recrutamento e Seleção", "l3en": "Recruitment & Selection", "actor": "Jurídico / Compliance / SST", "acten": "Legal / Compliance / OHS", "tot": 1, "man": 1, "avg": 2.0, "band": "human"}, {"l3": "Recrutamento e Seleção", "l3en": "Recruitment & Selection", "actor": "Medicina / Saúde", "acten": "Medical / Health", "tot": 1, "man": 1, "avg": 3.0, "band": "hybrid"}, {"l3": "Admissão", "l3en": "Hiring", "actor": "COE", "acten": "COE", "tot": 28, "man": 26, "avg": 4.15, "band": "auto"}, {"l3": "Admissão", "l3en": "Hiring", "actor": "Admissão (Operação)", "acten": "Hiring (Operations)", "tot": 73, "man": 65, "avg": 4.08, "band": "auto"}, {"l3": "Admissão", "l3en": "Hiring", "actor": "Empregado / Candidato", "acten": "Employee / Candidate", "tot": 6, "man": 6, "avg": 4.17, "band": "auto"}, {"l3": "Admissão", "l3en": "Hiring", "actor": "Jurídico / Compliance / SST", "acten": "Legal / Compliance / OHS", "tot": 0, "man": 0, "avg": null, "band": null}, {"l3": "Admissão", "l3en": "Hiring", "actor": "Recrutamento", "acten": "Recruitment", "tot": 7, "man": 7, "avg": 3.43, "band": "hybrid"}, {"l3": "Admissão", "l3en": "Hiring", "actor": "Gestor / Líder", "acten": "Manager / Leader", "tot": 0, "man": 0, "avg": null, "band": null}, {"l3": "Transferência", "l3en": "Transfer", "actor": "BP/Gestor (compartilhado)", "acten": "BP/Manager (shared)", "tot": 3, "man": 3, "avg": 3.33, "band": "hybrid"}, {"l3": "Transferência", "l3en": "Transfer", "actor": "Folha de Pagamento", "acten": "Payroll", "tot": 9, "man": 6, "avg": 3.83, "band": "hybrid"}, {"l3": "Transferência", "l3en": "Transfer", "actor": "COE", "acten": "COE", "tot": 12, "man": 9, "avg": 3.0, "band": "hybrid"}, {"l3": "Promoção", "l3en": "Promotion", "actor": "BP/Gestor (compartilhado)", "acten": "BP/Manager (shared)", "tot": 2, "man": 2, "avg": 3.0, "band": "hybrid"}, {"l3": "Promoção", "l3en": "Promotion", "actor": "Operações de RH", "acten": "HR Operations", "tot": 3, "man": 0, "avg": null, "band": null}, {"l3": "Licenças", "l3en": "Leaves", "actor": "Jurídico / Compliance / SST", "acten": "Legal / Compliance / OHS", "tot": 1, "man": 1, "avg": 4.0, "band": "auto"}, {"l3": "Licenças", "l3en": "Leaves", "actor": "Benefícios", "acten": "Benefits", "tot": 1, "man": 1, "avg": 2.0, "band": "human"}, {"l3": "Licenças", "l3en": "Leaves", "actor": "COI", "acten": "COI", "tot": 4, "man": 2, "avg": 3.0, "band": "hybrid"}, {"l3": "Licenças", "l3en": "Leaves", "actor": "Folha de Pagamento", "acten": "Payroll", "tot": 3, "man": 1, "avg": 2.0, "band": "human"}, {"l3": "Licenças", "l3en": "Leaves", "actor": "Medicina / Saúde", "acten": "Medical / Health", "tot": 9, "man": 7, "avg": 3.57, "band": "hybrid"}, {"l3": "Licenças", "l3en": "Leaves", "actor": "BP/Gestor (compartilhado)", "acten": "BP/Manager (shared)", "tot": 1, "man": 1, "avg": 5.0, "band": "auto"}, {"l3": "Licenças", "l3en": "Leaves", "actor": "Empregado / Candidato", "acten": "Employee / Candidate", "tot": 4, "man": 3, "avg": 4.0, "band": "auto"}, {"l3": "Gestão de Férias", "l3en": "Vacation Mgmt", "actor": "Empregado / Candidato", "acten": "Employee / Candidate", "tot": 4, "man": 4, "avg": 4.5, "band": "auto"}, {"l3": "Gestão de Férias", "l3en": "Vacation Mgmt", "actor": "Gestor / Líder", "acten": "Manager / Leader", "tot": 1, "man": 1, "avg": 2.0, "band": "human"}, {"l3": "Gestão de Férias", "l3en": "Vacation Mgmt", "actor": "Operações de RH", "acten": "HR Operations", "tot": 8, "man": 6, "avg": 2.83, "band": "hybrid"}, {"l3": "Gestão de Férias", "l3en": "Vacation Mgmt", "actor": "COI", "acten": "COI", "tot": 11, "man": 9, "avg": 3.33, "band": "hybrid"}, {"l3": "Gestão de Férias", "l3en": "Vacation Mgmt", "actor": "Folha de Pagamento", "acten": "Payroll", "tot": 7, "man": 2, "avg": 3.5, "band": "hybrid"}, {"l3": "Gestão de Férias", "l3en": "Vacation Mgmt", "actor": "TI / SAP", "acten": "IT / SAP", "tot": 7, "man": 6, "avg": 4.0, "band": "auto"}, {"l3": "Gestão de Férias", "l3en": "Vacation Mgmt", "actor": "Jurídico / Compliance / SST", "acten": "Legal / Compliance / OHS", "tot": 5, "man": 5, "avg": 1.6, "band": "human"}, {"l3": "Desligamento", "l3en": "Termination", "actor": "COE", "acten": "COE", "tot": 6, "man": 3, "avg": 4.0, "band": "auto"}, {"l3": "Desligamento", "l3en": "Termination", "actor": "Benefícios", "acten": "Benefits", "tot": 2, "man": 2, "avg": 3.0, "band": "hybrid"}, {"l3": "Desligamento", "l3en": "Termination", "actor": "Folha de Pagamento", "acten": "Payroll", "tot": 19, "man": 17, "avg": 3.0, "band": "hybrid"}, {"l3": "Desligamento", "l3en": "Termination", "actor": "Business Partner (BP)", "acten": "Business Partner (BP)", "tot": 5, "man": 5, "avg": 3.8, "band": "hybrid"}, {"l3": "Desligamento", "l3en": "Termination", "actor": "Gestor / Líder", "acten": "Manager / Leader", "tot": 7, "man": 7, "avg": 3.14, "band": "hybrid"}, {"l3": "Administração de dados pessoais dos colaboradores", "l3en": "Personal Data Admin", "actor": "COE", "acten": "COE", "tot": 10, "man": 8, "avg": 4.0, "band": "auto"}, {"l3": "Administração de dados pessoais dos colaboradores", "l3en": "Personal Data Admin", "actor": "Empregado / Candidato", "acten": "Employee / Candidate", "tot": 1, "man": 1, "avg": 4.0, "band": "auto"}, {"l3": "Controle de Jornada", "l3en": "Time & Attendance", "actor": "Business Partner (BP)", "acten": "Business Partner (BP)", "tot": 1, "man": 1, "avg": 4.0, "band": "auto"}, {"l3": "Controle de Jornada", "l3en": "Time & Attendance", "actor": "Jurídico / Compliance / SST", "acten": "Legal / Compliance / OHS", "tot": 3, "man": 3, "avg": 2.0, "band": "human"}, {"l3": "Controle de Jornada", "l3en": "Time & Attendance", "actor": "Folha de Pagamento", "acten": "Payroll", "tot": 16, "man": 13, "avg": 3.62, "band": "hybrid"}, {"l3": "Controle de Jornada", "l3en": "Time & Attendance", "actor": "Empregado / Candidato", "acten": "Employee / Candidate", "tot": 5, "man": 5, "avg": 4.0, "band": "auto"}, {"l3": "Controle de Jornada", "l3en": "Time & Attendance", "actor": "Gestor / Líder", "acten": "Manager / Leader", "tot": 1, "man": 1, "avg": 2.0, "band": "human"}, {"l3": "Controle de Jornada", "l3en": "Time & Attendance", "actor": "Operações de RH", "acten": "HR Operations", "tot": 4, "man": 4, "avg": 3.5, "band": "hybrid"}, {"l3": "Controle de Jornada", "l3en": "Time & Attendance", "actor": "COE", "acten": "COE", "tot": 2, "man": 0, "avg": null, "band": null}, {"l3": "Controle de Jornada", "l3en": "Time & Attendance", "actor": "BP/Gestor (compartilhado)", "acten": "BP/Manager (shared)", "tot": 1, "man": 1, "avg": 2.0, "band": "human"}, {"l3": "Administração de dados de contrato", "l3en": "Contract Data Management", "actor": "Operações de RH", "acten": "HR Operations", "tot": 11, "man": 10, "avg": 3.0, "band": "hybrid"}, {"l3": "Administração de dados de contrato", "l3en": "Contract Data Management", "actor": "Empregado / Candidato", "acten": "Employee / Candidate", "tot": 7, "man": 7, "avg": 2.14, "band": "human"}], "actors": [{"actor": "Business Partner (BP)", "acten": "Business Partner (BP)", "nproc": 5, "tot": 21, "man": 20, "aut": 1, "avg": 3.45, "band": "hybrid", "nraias": 5}, {"actor": "Jurídico / Compliance / SST", "acten": "Legal / Compliance / OHS", "nproc": 6, "tot": 12, "man": 12, "aut": 0, "avg": 1.92, "band": "human", "nraias": 7}, {"actor": "Operações de RH", "acten": "HR Operations", "nproc": 5, "tot": 34, "man": 28, "aut": 6, "avg": 2.93, "band": "hybrid", "nraias": 6}, {"actor": "COE", "acten": "COE", "nproc": 6, "tot": 63, "man": 51, "aut": 12, "avg": 3.8, "band": "hybrid", "nraias": 7}, {"actor": "TI / SAP", "acten": "IT / SAP", "nproc": 2, "tot": 16, "man": 15, "aut": 1, "avg": 3.53, "band": "hybrid", "nraias": 2}, {"actor": "Gestor / Líder", "acten": "Manager / Leader", "nproc": 6, "tot": 13, "man": 13, "aut": 0, "avg": 2.92, "band": "hybrid", "nraias": 7}, {"actor": "Planejamento / Orçamento", "acten": "Planning / Budget", "nproc": 1, "tot": 10, "man": 6, "aut": 4, "avg": 2.17, "band": "human", "nraias": 4}, {"actor": "Admissão (Operação)", "acten": "Hiring (Operations)", "nproc": 2, "tot": 76, "man": 67, "aut": 9, "avg": 4.04, "band": "auto", "nraias": 6}, {"actor": "Recrutamento", "acten": "Recruitment", "nproc": 2, "tot": 30, "man": 28, "aut": 2, "avg": 3.11, "band": "hybrid", "nraias": 3}, {"actor": "Empregado / Candidato", "acten": "Employee / Candidate", "nproc": 7, "tot": 28, "man": 27, "aut": 1, "avg": 3.63, "band": "hybrid", "nraias": 7}, {"actor": "Medicina / Saúde", "acten": "Medical / Health", "nproc": 2, "tot": 10, "man": 8, "aut": 2, "avg": 3.5, "band": "hybrid", "nraias": 2}, {"actor": "BP/Gestor (compartilhado)", "acten": "BP/Manager (shared)", "nproc": 4, "tot": 7, "man": 7, "aut": 0, "avg": 3.29, "band": "hybrid", "nraias": 5}, {"actor": "Folha de Pagamento", "acten": "Payroll", "nproc": 5, "tot": 54, "man": 39, "aut": 15, "avg": 3.33, "band": "hybrid", "nraias": 6}, {"actor": "Benefícios", "acten": "Benefits", "nproc": 2, "tot": 3, "man": 3, "aut": 0, "avg": 2.67, "band": "hybrid", "nraias": 2}, {"actor": "COI", "acten": "COI", "nproc": 2, "tot": 15, "man": 11, "aut": 4, "avg": 3.27, "band": "hybrid", "nraias": 2}], "stacks": [{"l3": "Administração de Estrutura Organizacional", "l3en": "Org. Structure Admin", "auto": 8, "hybrid": 12, "human": 8}, {"l3": "Gestão de Posições", "l3en": "Position Management", "auto": 2, "hybrid": 5, "human": 5}, {"l3": "Recrutamento e Seleção", "l3en": "Recruitment & Selection", "auto": 12, "hybrid": 12, "human": 10}, {"l3": "Admissão", "l3en": "Hiring", "auto": 83, "hybrid": 18, "human": 3}, {"l3": "Transferência", "l3en": "Transfer", "auto": 8, "hybrid": 7, "human": 3}, {"l3": "Promoção", "l3en": "Promotion", "auto": 1, "hybrid": 0, "human": 1}, {"l3": "Licenças", "l3en": "Leaves", "auto": 8, "hybrid": 4, "human": 4}, {"l3": "Gestão de Férias", "l3en": "Vacation Mgmt", "auto": 15, "hybrid": 10, "human": 8}, {"l3": "Desligamento", "l3en": "Termination", "auto": 18, "hybrid": 8, "human": 8}, {"l3": "Administração de dados pessoais dos colaboradores", "l3en": "Personal Data Admin", "auto": 6, "hybrid": 3, "human": 0}, {"l3": "Controle de Jornada", "l3en": "Time & Attendance", "auto": 15, "hybrid": 7, "human": 6}, {"l3": "Administração de dados de contrato", "l3en": "Contract Data Management", "auto": 3, "hybrid": 5, "human": 9}]};
+let LANG='pt';
+const T=(pt,en)=>LANG==='pt'?pt:en;
+const bandColor={auto:'#A100FF',hybrid:'#B98AE0',human:'#D9D2E8'};
+const bandLabel={auto:{pt:'Automatizável',en:'Automatable'},hybrid:{pt:'Híbrida',en:'Hybrid'},human:{pt:'Humana crítica',en:'Human-critical'}};
+function setLang(l){LANG=l;
+  document.querySelectorAll('[data-pt]').forEach(e=>e.style.display=l==='pt'?'':'none');
+  document.querySelectorAll('[data-en]').forEach(e=>e.style.display=l==='en'?'':'none');
+  document.getElementById('btPt').classList.toggle('on',l==='pt');document.getElementById('btEn').classList.toggle('on',l==='en');
+  document.documentElement.lang=l==='pt'?'pt-BR':'en';render();}
+const baseTip={backgroundColor:'#FFFFFF',borderColor:'#D4D4DC',borderWidth:1,textStyle:{color:'#1A1A24',fontFamily:'IBM Plex Mono',fontSize:12},extraCssText:'box-shadow:0 4px 16px rgba(26,26,36,.12);border-radius:6px;'};
+const axisTxt={color:'#6E6E7A',fontFamily:'IBM Plex Mono'};
+const axisLine={lineStyle:{color:'#D4D4DC'}};
+const splitLine={lineStyle:{color:'#EEEEF2'}};
+
+function kpis(){
+  const tot=DATA.l3.reduce((a,s)=>a+s.total,0),man=DATA.l3.reduce((a,s)=>a+s.man,0),aut=DATA.l3.reduce((a,s)=>a+s.aut,0);
+  const autoActors=DATA.actors.filter(a=>a.band==='auto').length;
+  document.getElementById('kpis').innerHTML=`
+    <div class="kpi"><div class="n">${tot}</div><div class="l">${T('Atividades mapeadas','Activities mapped')}</div></div>
+    <div class="kpi hl"><div class="n">${man}<small> / ${tot}</small></div><div class="l">${T('Ainda manuais','Still manual')}</div></div>
+    <div class="kpi"><div class="n">${Math.round(aut/tot*100)}<small>%</small></div><div class="l">${T('Já automatizado','Already automated')}</div></div>
+    <div class="kpi hl"><div class="n">${autoActors}<small> / ${DATA.actors.length}</small></div><div class="l">${T('Atores automatizáveis','Automatable actors')}</div></div>`;
+}
+
+function quad(){
+  const c=echarts.init(document.getElementById('quad'),null,{renderer:'canvas'});
+  const pts=DATA.l3.filter(s=>s.avg!==null).map(s=>({value:[s.total,s.avg,s.nactors],raw:s,itemStyle:{color:bandColor[s.band],opacity:.85}}));
+  const maxX=Math.max(...pts.map(p=>p.value[0]));
+  c.setOption({grid:{left:54,right:34,top:24,bottom:52},
+    tooltip:{...baseTip,formatter:p=>{const s=p.data.raw;const drill=s.subs.length<2?'':'<br><span style="color:#9A9AA6">'+s.subs.map(x=>`&nbsp;· ${T(x.sub,x.suben)} (${x.total}, ${T('nota','score')} ${x.avg??'—'})`).join('<br>')+'</span>';return `<b>${T(s.l3,s.l3en)}</b><br>${T('Total','Total')}: <b>${s.total}</b> · ${T('Manuais','Manual')}: ${s.man} · ${T('Auto','Auto')}: ${s.aut}<br>${T('Atores','Actors')}: ${s.nactors} · ${T('Nota','Score')}: ${s.avg}${drill}`;}},
+    xAxis:{name:T('Volume de atividades →','Activity volume →'),nameLocation:'middle',nameGap:32,nameTextStyle:axisTxt,type:'value',min:0,axisLine,splitLine,axisLabel:{color:'#6E6E7A'}},
+    yAxis:{name:T('← humano   |   Nota 1–5   |   automatizável →','← human   |   Score 1–5   |   automatable →'),nameLocation:'middle',nameGap:34,nameTextStyle:{...axisTxt,fontSize:11},type:'value',min:1,max:5,axisLine,splitLine,axisLabel:{color:'#6E6E7A'}},
+    series:[{type:'scatter',data:pts,symbolSize:v=>Math.max(14,v[2]*4.5),
+      labelLayout:{moveOverlap:'shiftY',hideOverlap:false},
+      labelLine:{show:true,lineStyle:{color:'#C4C4CC',width:1}},
+      markArea:{silent:true,itemStyle:{color:'rgba(161,0,255,.05)'},data:[[{yAxis:4,xAxis:Math.max(20,maxX*0.35)},{yAxis:5}]]},
+      markLine:{silent:true,symbol:'none',lineStyle:{color:'#D4D4DC',type:'dashed'},data:[{yAxis:2.5},{yAxis:3.5}]},
+      label:{show:true,formatter:p=>T(p.data.raw.l3,p.data.raw.l3en),position:'top',color:'#3C3C48',fontSize:9.5,fontFamily:'IBM Plex Mono'}}]});
+  return c;
+}
+function scatterActor(){
+  const c=echarts.init(document.getElementById('quadA'),null,{renderer:'canvas'});
+  const pts=DATA.actors.filter(s=>s.avg!==null).map(s=>({value:[s.tot,s.avg,s.nraias],raw:s,itemStyle:{color:bandColor[s.band],opacity:.85}}));
+  const maxX=Math.max(...pts.map(p=>p.value[0]));
+  c.setOption({grid:{left:54,right:34,top:24,bottom:52},
+    tooltip:{...baseTip,formatter:p=>{const s=p.data.raw;return `<b>${T(s.actor,s.acten)}</b><br>${T('Em','In')} ${s.nproc} ${T('processos','processes')} · ${s.nraias} ${T('raias','swimlanes')}<br>${T('Total','Total')}: <b>${s.tot}</b> · ${T('Manuais','Manual')}: ${s.man} · ${T('Auto','Auto')}: ${s.aut}<br>${T('Nota','Score')}: ${s.avg}`;}},
+    xAxis:{name:T('Volume de atividades →','Activity volume →'),nameLocation:'middle',nameGap:32,nameTextStyle:axisTxt,type:'value',min:0,axisLine,splitLine,axisLabel:{color:'#6E6E7A'}},
+    yAxis:{name:T('← humano   |   Nota 1–5   |   automatizável →','← human   |   Score 1–5   |   automatable →'),nameLocation:'middle',nameGap:34,nameTextStyle:{...axisTxt,fontSize:11},type:'value',min:1,max:5,axisLine,splitLine,axisLabel:{color:'#6E6E7A'}},
+    series:[{type:'scatter',data:pts,symbolSize:v=>Math.max(14,v[2]*3.2),
+      labelLayout:{moveOverlap:'shiftY',hideOverlap:false},
+      labelLine:{show:true,lineStyle:{color:'#C4C4CC',width:1}},
+      markArea:{silent:true,itemStyle:{color:'rgba(161,0,255,.05)'},data:[[{yAxis:4,xAxis:Math.max(20,maxX*0.35)},{yAxis:5}]]},
+      markLine:{silent:true,symbol:'none',lineStyle:{color:'#D4D4DC',type:'dashed'},data:[{yAxis:2.5},{yAxis:3.5}]},
+      label:{show:true,formatter:p=>T(p.data.raw.actor,p.data.raw.acten),position:'top',color:'#3C3C48',fontSize:9.5,fontFamily:'IBM Plex Mono'}}]});
+  return c;
+}
+function heat(){
+  const c=echarts.init(document.getElementById('heat'),null,{renderer:'canvas'});
+  const rows=DATA.lanesL3.filter(l=>l.avg!==null);
+  const accP={},accA={};
+  rows.forEach(l=>{const pk=T(l.l3,l.l3en),ak=T(l.actor,l.acten);(accP[pk]=accP[pk]||[]).push(l.avg);(accA[ak]=accA[ak]||[]).push(l.avg);});
+  const mean=a=>a.reduce((x,y)=>x+y,0)/a.length;
+  const procs=Object.keys(accP).sort((a,b)=>mean(accP[a])-mean(accP[b]));
+  const actorsY=Object.keys(accA).sort((a,b)=>mean(accA[b])-mean(accA[a]));
+  const dd=rows.map(l=>[procs.indexOf(T(l.l3,l.l3en)),actorsY.indexOf(T(l.actor,l.acten)),l.avg]);
+  c.setOption({grid:{left:200,right:24,top:12,bottom:150},
+    tooltip:{...baseTip,formatter:p=>`${actorsY[p.value[1]]}<br>${procs[p.value[0]]}<br><b>${T('Nota','Score')}: ${p.value[2]}</b>`},
+    xAxis:{type:'category',data:procs,axisLabel:{color:'#6E6E7A',rotate:40,fontSize:10,fontFamily:'IBM Plex Mono'},axisLine,splitArea:{show:false}},
+    yAxis:{type:'category',data:actorsY,axisLabel:{color:'#3C3C48',fontSize:10,fontFamily:'IBM Plex Mono'},axisLine},
+    visualMap:{min:1,max:5,calculable:true,orient:'horizontal',left:'center',bottom:40,textStyle:axisTxt,inRange:{color:['#3E8E3E','#8CB84A','#E8B800','#E8751A','#C00000']}},
+    series:[{type:'heatmap',data:dd,label:{show:true,color:'#1A1A24',fontSize:9,fontFamily:'IBM Plex Mono',fontWeight:600},itemStyle:{borderColor:'#fff',borderWidth:2},emphasis:{itemStyle:{shadowBlur:6,shadowColor:'rgba(161,0,255,.3)'}}}]});
+  return c;
+}
+function stackbars(){
+  const c=echarts.init(document.getElementById('stackbars'),null,{renderer:'canvas'});
+  const rows=DATA.stacks.map(s=>{const tot=s.auto+s.hybrid+s.human;return{...s,tot,pa:s.auto/tot,ph:s.hybrid/tot,pu:s.human/tot};}).sort((a,b)=>a.pa-b.pa);
+  const cats=rows.map(s=>T(s.l3,s.l3en));
+  const mk=(key,pkey,color,name,lbldark)=>({name,type:'bar',stack:'t',barWidth:'60%',itemStyle:{color},emphasis:{focus:'series'},
+    data:rows.map(s=>({value:s[pkey],raw:s,cnt:s[key]})),
+    label:{show:true,formatter:p=>p.data.value>=0.08?Math.round(p.data.value*100)+'%':'',color:lbldark?'#fff':'#3C3C48',fontFamily:'IBM Plex Mono',fontSize:10,fontWeight:600}});
+  c.setOption({grid:{left:170,right:28,top:8,bottom:40},
+    tooltip:{...baseTip,trigger:'axis',axisPointer:{type:'shadow'},formatter:ps=>{const s=ps[0].data.raw;return `<b>${T(s.l3,s.l3en)}</b> · ${s.tot} ${T('atividades','activities')}<br>`+ps.map(p=>`${p.marker}${p.seriesName}: <b>${p.data.cnt}</b> (${Math.round(p.data.value*100)}%)`).join('<br>');}},
+    legend:{show:false},
+    xAxis:{type:'value',max:1,axisLabel:{formatter:v=>Math.round(v*100)+'%',color:'#6E6E7A',fontFamily:'IBM Plex Mono'},axisLine,splitLine},
+    yAxis:{type:'category',data:cats,axisLabel:{color:'#3C3C48',fontSize:11,fontFamily:'IBM Plex Mono'},axisLine},
+    series:[mk('auto','pa','#A100FF',T('Automatizável','Automatable'),true),mk('hybrid','ph','#B98AE0',T('Híbrida','Hybrid'),false),mk('human','pu','#D9D2E8',T('Humana crítica','Human-critical'),false)]});
+  return c;
+}
+function sankeyB(){
+  const c=echarts.init(document.getElementById('sankeyB'),null,{renderer:'canvas'});
+  const nodes={},links=[];
+  const addN=(n,color)=>{if(!nodes[n])nodes[n]={name:n,itemStyle:{color}}};
+  const man=T('Manual','Manual'),aut=T('Automático','Automated');
+  addN(man,'#A100FF');addN(aut,'#C0C0CC');
+  const procTotal={};
+  DATA.l3.forEach(s=>{const nm=T(s.l3,s.l3en);addN(nm,'#8A6BB0');procTotal[nm]=s.man+s.aut;if(s.man>0)links.push({source:nm,target:man,value:s.man});if(s.aut>0)links.push({source:nm,target:aut,value:s.aut});});
+  c.setOption({tooltip:{...baseTip,trigger:'item',formatter:p=>{
+      if(p.dataType==='edge'){const tot=procTotal[p.data.source]||0;const pct=tot?Math.round(p.data.value/tot*100):0;
+        return `<b>${p.data.source}</b> → ${p.data.target}<br>${p.data.value} ${T('atividades','activities')} · <b>${pct}%</b> ${T('do processo','of the process')}`;}
+      const tot=procTotal[p.name];return tot?`<b>${p.name}</b><br>${tot} ${T('atividades','activities')}`:`<b>${p.name}</b>`;}},
+    series:[{type:'sankey',data:Object.values(nodes),links,emphasis:{focus:'adjacency'},nodeGap:8,nodeWidth:14,label:{color:'#1A1A24',fontFamily:'IBM Plex Mono',fontSize:11},lineStyle:{color:'gradient',opacity:.4,curveness:.5}}]});
+  return c;
+}
+function ranking(){
+  const rows=DATA.actors.filter(s=>s.avg!==null).map(s=>({...s,opp:s.man*(s.avg-1)/4})).sort((a,b)=>b.opp-a.opp);
+  const max=Math.max(...rows.map(r=>r.opp));
+  document.getElementById('ranktbl').innerHTML=`<thead><tr><th>#</th><th>${T('Ator Padrão','Standard Actor')}</th><th>${T('Proc.','Proc.')}</th><th>${T('Total','Total')}</th><th>${T('Manuais','Manual')}</th><th>${T('Nota','Score')}</th><th>${T('Classe','Class')}</th><th style="width:150px">${T('Índice','Index')}</th></tr></thead><tbody>`+
+    rows.map((r,i)=>`<tr><td style="font-family:var(--mono);color:var(--faint)">${String(i+1).padStart(2,'0')}</td>
+      <td style="font-weight:600;color:var(--ink)">${T(r.actor,r.acten)}</td>
+      <td style="font-family:var(--mono);color:var(--muted)">${r.nproc}</td>
+      <td style="font-family:var(--mono);color:var(--muted)">${r.tot}</td>
+      <td style="font-family:var(--mono)">${r.man}</td>
+      <td style="font-family:var(--mono);color:var(--purple-d);font-weight:600">${r.avg}</td>
+      <td><span class="pill ${r.band}">${bandLabel[r.band][LANG]}</span></td>
+      <td><div class="bar"><span style="width:${Math.round(r.opp/max*100)}%"></span></div></td></tr>`).join('')+`</tbody>`;
+}
+function insights(){
+  const adm=DATA.l3.find(s=>s.l3==='Admissão');
+  const pos=DATA.l3.find(s=>s.l3==='Gestão de Posições');
+  const admA=DATA.actors.find(a=>a.actor==='Admissão (Operação)');
+  const coe=DATA.actors.find(a=>a.actor==='COE');
+  const jur=DATA.actors.find(a=>a.actor==='Jurídico / Compliance / SST');
+  const tot=DATA.l3.reduce((a,s)=>a+s.total,0),aut=DATA.l3.reduce((a,s)=>a+s.aut,0),man=DATA.l3.reduce((a,s)=>a+s.man,0);
+  const set=(id,t)=>{const e=document.getElementById(id);if(e)e.innerHTML=t;};
+  set('ins-quad-h',T('Admissão é o quick-win nº 1','Hiring is the #1 quick-win'));
+  set('ins-quad',T(`<b>${adm.man} atividades manuais</b> a nota <b>${adm.avg}</b> — o maior alvo isolado de RPA. No extremo oposto, <b>Gestão de Posições (nota ${pos.avg})</b> depende de decisão e aprovação: preservar, não automatizar.`,
+    `<b>${adm.man} manual activities</b> at score <b>${adm.avg}</b> — the largest single RPA target. At the opposite end, <b>Position Management (score ${pos.avg})</b> relies on decision and approval: preserve, don't automate.`));
+  set('ins-actor-h',T('COE é a alavanca transversal','COE is the cross-cutting lever'));
+  set('ins-actor',T(`<b>Admissão (Operação)</b> e <b>Empregado/Candidato</b> concentram o maior potencial. Mas o <b>COE atua em ${coe.nproc} processos com ${coe.man} atividades manuais</b> — automatizá-lo rende ganho multiprocesso. <b>${T(jur.actor,jur.acten)} (nota ${jur.avg})</b> permanece intocável.`,
+    `<b>Hiring (Operations)</b> and <b>Employee/Candidate</b> hold the greatest potential. But <b>COE spans ${coe.nproc} processes with ${coe.man} manual activities</b> — automating it yields multi-process gains. <b>${T(jur.actor,jur.acten)} (score ${jur.avg})</b> stays untouchable.`));
+  set('ins-stack-h',T('80% de Admissão é automatizável','80% of Hiring is automatable'));
+  set('ins-stack',T(`Quanto mais roxa a barra, maior a captura por RPA/agentes: <b>Admissão lidera (80%)</b>, seguida de Dados Pessoais e Controle de Jornada. <b>Gestão de Posições (17%)</b> fecha o ranking — quase todo trabalho de julgamento.`,
+    `The more purple the bar, the greater the RPA/agent capture: <b>Hiring leads (80%)</b>, followed by Personal Data and Time & Attendance. <b>Position Management (17%)</b> closes the ranking — almost entirely judgment work.`));
+  set('ins-sankB-h',T(`Só ${Math.round(aut/tot*100)}% do trabalho já é automático`,`Only ${Math.round(aut/tot*100)}% of work is already automated`));
+  set('ins-sankB',T(`<b>${man} de ${tot} atividades</b> ainda são manuais. Folha, COE e a operação de Admissão concentram esse volume — é onde a primeira onda de automação gera o maior retorno.`,
+    `<b>${man} of ${tot} activities</b> are still manual. Payroll, COE and Hiring operations concentrate this volume — where the first automation wave yields the highest return.`));
+}
+let charts=[];
+function render(){charts.forEach(c=>c&&c.dispose());charts=[];kpis();insights();ranking();
+  charts.push(quad(),scatterActor(),heat(),stackbars(),sankeyB());}
+function downloadHTML(){
+  const html='<!DOCTYPE html>\n'+document.documentElement.outerHTML;
+  const blob=new Blob([html],{type:'text/html;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='VCBR_Dashboard_Executivo.html';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+window.addEventListener('resize',()=>charts.forEach(c=>c&&c.resize()));
+window.addEventListener('beforeprint',()=>charts.forEach(c=>c&&c.resize()));
+window.addEventListener('afterprint',()=>charts.forEach(c=>c&&c.resize()));
+setLang('pt');
+</script>
+</body>
+</html>
